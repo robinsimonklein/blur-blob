@@ -189,7 +189,7 @@ effectsFolder.add(config, 'blurAmount', 0, 500);
 effectsFolder.add(config, 'grain');
 effectsFolder.add(config, 'grainAnimate');
 effectsFolder.add(config, 'grainAmount', 0, 1);
-effectsFolder.add(config, 'grainSize', 0, 2, 0.1);
+effectsFolder.add(config, 'grainSize', 1, 8, 0.1);
 
 
 const animationFolder = gui.addFolder('Animation');
