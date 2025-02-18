@@ -14,7 +14,7 @@ canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
 const config = {
-    radius: 100,
+    radius: 120,
     variation: 40,
     segments: 8,
     color1: '#FE5F38',
@@ -26,7 +26,7 @@ const config = {
     blurAmount: 120,
     grain: true,
     grainAnimate: true,
-    grainAmount: 0.5,
+    grainAmount: 0.2,
     grainSize: 1,
     pause: false
 };
@@ -189,7 +189,7 @@ effectsFolder.add(config, 'blurAmount', 0, 500);
 effectsFolder.add(config, 'grain');
 effectsFolder.add(config, 'grainAnimate');
 effectsFolder.add(config, 'grainAmount', 0, 1);
-effectsFolder.add(config, 'grainSize', 1, 8, 0.1);
+effectsFolder.add(config, 'grainSize', 0, 2, 0.1);
 
 
 const animationFolder = gui.addFolder('Animation');
