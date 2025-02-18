@@ -25,6 +25,7 @@ const config = {
     blur: true,
     blurAmount: 120,
     grain: true,
+    grainAnimate: true,
     grainAmount: 0.5,
     grainSize: 1,
     pause: false
@@ -146,7 +147,7 @@ const blob2 = new Blob(1000); // Décalage temporel de 1000ms
 
 function drawScene(time) {
 
-    updateGrainCanvas()
+    if(config.grainAnimate) updateGrainCanvas()
 
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -159,10 +160,16 @@ function drawScene(time) {
 
     ctx.filter = 'none'
 
+    // Désactiver le lissage pour le grain
+    ctx.imageSmoothingEnabled = false;
+
     // Application du grain blanc simple
     ctx.globalAlpha = config.grainAmount;
     ctx.drawImage(grainCanvas, 0, 0, canvas.width, canvas.height);
     ctx.globalAlpha = 1;
+
+    // Réactiver le lissage pour le reste
+    ctx.imageSmoothingEnabled = true;
 }
 
 const gui = new GUI();
@@ -180,6 +187,7 @@ const effectsFolder = gui.addFolder('Effects');
 effectsFolder.add(config, 'blur');
 effectsFolder.add(config, 'blurAmount', 0, 500);
 effectsFolder.add(config, 'grain');
+effectsFolder.add(config, 'grainAnimate');
 effectsFolder.add(config, 'grainAmount', 0, 1);
 effectsFolder.add(config, 'grainSize', 1, 8, 0.1);
 
