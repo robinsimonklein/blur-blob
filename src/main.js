@@ -16,37 +16,63 @@ canvas.height = window.innerHeight;
 const config = {
     radius: 120,
     variation: 40,
-    segments: 8,
+    segments: 6,
     color1: '#FE5F38',
     color2: '#6144E3',
     offset: 100, // Décalage entre les deux blobs
+    animate: true,
     animationSpeed: 1,
     animationAmount: 30,
     blur: true,
     blurAmount: 120,
     grain: true,
     grainAnimate: true,
-    grainAmount: 0.2,
+    grainOpacity: 0.2,
+    grainHardness: 1,
     grainSize: 1,
-    pause: false
+    grainColor: '#ffffff',
 };
 
 // Canvas temporaire pour le grain
 const grainCanvas = document.createElement('canvas');
 const grainCtx = grainCanvas.getContext('2d');
 
+// Taille fixe du motif de grain
+const GRAIN_PATTERN_SIZE = 128;
+grainCanvas.width = GRAIN_PATTERN_SIZE;
+grainCanvas.height = GRAIN_PATTERN_SIZE;
+
+function hexToRgb(hex) {
+    // Supprime le caractère '#' si présent
+    hex = hex.replace(/^#/, '');
+
+    // Convertit les valeurs hexadécimales en entiers
+    let bigint = parseInt(hex, 16);
+    let r = (bigint >> 16) & 255;
+    let g = (bigint >> 8) & 255;
+    let b = bigint & 255;
+
+    return [r, g, b];
+}
+
+function getGrainPixelAlpha(hardness) {
+    // On génère un nombre aléatoire unique
+    const r = Math.random();
+    // On interpole entre la valeur continue (r * 255) et la valeur binaire (Math.round(r) * 255)
+    return (1 - hardness) * (r * 255) + hardness * (Math.round(r) * 255);
+}
+
 function updateGrainCanvas() {
-    grainCanvas.width = window.innerWidth / config.grainSize;
-    grainCanvas.height = window.innerHeight / config.grainSize;
-    const imageData = grainCtx.createImageData(grainCanvas.width, grainCanvas.height);
+    const imageData = grainCtx.createImageData(GRAIN_PATTERN_SIZE, GRAIN_PATTERN_SIZE);
     const data = imageData.data;
 
+    const color = hexToRgb(config.grainColor);
+
     for (let i = 0; i < data.length; i += 4) {
-        // Point blanc avec opacité aléatoire
-        data[i] = 255;     // Rouge
-        data[i + 1] = 255; // Vert
-        data[i + 2] = 255; // Bleu
-        data[i + 3] = Math.random() * 255;   // Alpha aléatoire
+        data[i] = color[0];     // Rouge
+        data[i + 1] = color[1]; // Vert
+        data[i + 2] = color[2]; // Bleu
+        data[i + 3] = getGrainPixelAlpha(config.grainHardness);   // Alpha aléatoire
     }
 
     grainCtx.putImageData(imageData, 0, 0);
@@ -160,16 +186,23 @@ function drawScene(time) {
 
     ctx.filter = 'none'
 
-    // Désactiver le lissage pour le grain
-    ctx.imageSmoothingEnabled = false;
+    if(config.grain) {
+        // Désactiver le lissage pour le grain
+        ctx.imageSmoothingEnabled = false;
 
-    // Application du grain blanc simple
-    ctx.globalAlpha = config.grainAmount;
-    ctx.drawImage(grainCanvas, 0, 0, canvas.width, canvas.height);
-    ctx.globalAlpha = 1;
+        // Application du grain blanc simple en le répétant
+        ctx.globalAlpha = config.grainOpacity;
+        const scaledSize = GRAIN_PATTERN_SIZE * config.grainSize;
+        for(let x = 0; x < canvas.width; x += scaledSize) {
+            for(let y = 0; y < canvas.height; y += scaledSize) {
+                ctx.drawImage(grainCanvas, x, y, scaledSize, scaledSize);
+            }
+        }
+        ctx.globalAlpha = 1;
 
-    // Réactiver le lissage pour le reste
-    ctx.imageSmoothingEnabled = true;
+        // Réactiver le lissage pour le reste
+        ctx.imageSmoothingEnabled = true;
+    }
 }
 
 const gui = new GUI();
@@ -188,20 +221,21 @@ effectsFolder.add(config, 'blur');
 effectsFolder.add(config, 'blurAmount', 0, 500);
 effectsFolder.add(config, 'grain');
 effectsFolder.add(config, 'grainAnimate');
-effectsFolder.add(config, 'grainAmount', 0, 1);
-effectsFolder.add(config, 'grainSize', 1, 8, 0.1);
+effectsFolder.add(config, 'grainOpacity', 0, 1);
+effectsFolder.add(config, 'grainHardness', 0, 1).onChange(updateGrainCanvas);
+effectsFolder.add(config, 'grainSize', 1, 8, 0.1).onChange(updateGrainCanvas);
+effectsFolder.addColor(config, 'grainColor').onChange(updateGrainCanvas);
 
 
 const animationFolder = gui.addFolder('Animation');
+animationFolder.add(config, 'animate' +
+    '');
 animationFolder.add(config, 'animationSpeed', 0.1, 5);
 animationFolder.add(config, 'animationAmount', 0, 50);
-animationFolder.add(config, 'pause');
 
 function animate(time) {
     stats.begin()
-    if (!config.pause) {
-        drawScene(time);
-    }
+    if (config.animate) drawScene(time);
     stats.end()
     requestAnimationFrame(animate);
 }
